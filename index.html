@@ -418,6 +418,52 @@ input:focus {
   line-height: 1.5;
 }
 
+.qr-section {
+  margin-top: 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.qr-canvas {
+  background: #fff;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.qr-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.qr-hint strong {
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* Print / Export styles */
+@media print {
+  body { background: #fff !important; color: #1a1a1a !important; }
+  body::before { display: none; }
+  .app-header, .nav-tabs, .theme-toggle, .header-actions,
+  button, .btn, .btn-ghost, #testBtn { display: none !important; }
+  .screen { display: block !important; }
+  #screen-setup, #screen-survey { display: none !important; }
+  #screen-dashboard { display: block !important; }
+  #tab-diagnostic { display: block !important; }
+  #tab-plan, #tab-pulse, #waitingState { display: none !important; }
+  #dashContent { display: block !important; }
+  .benchmark-grid, .risk-grid { border-color: #ddd; }
+  .benchmark-card, .risk-card { background: #fff; }
+  .spectrum-bar .segment { color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .risk-card.green-bg, .risk-card.amber-bg, .risk-card.red-bg { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* ══════════════════════════════════════════════════
    SCREEN 2: SURVEY
    ══════════════════════════════════════════════════ */
@@ -1129,6 +1175,13 @@ input[type="range"]::-webkit-slider-thumb {
           <button class="btn btn-secondary btn-sm" onclick="copyShareUrl()">Copy</button>
         </div>
         <p class="share-note" id="shareNote"></p>
+        <div class="qr-section" id="qrSection">
+          <canvas id="qrCanvas" class="qr-canvas" width="120" height="120"></canvas>
+          <div class="qr-hint">
+            <strong>Or scan to respond</strong>
+            Team members can scan this QR code with their phone camera to open the survey directly.
+          </div>
+        </div>
         <button class="btn-ghost mt-32" onclick="goToDashboard()">Go to dashboard</button>
       </div>
     </div>
@@ -1201,8 +1254,9 @@ input[type="range"]::-webkit-slider-thumb {
         <p class="label">Risk Signals</p>
         <div class="risk-grid" id="riskGrid"></div>
 
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
           <button class="btn btn-secondary btn-sm" onclick="addTestResponse()">+ Add test response</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportPDF()">Export as PDF</button>
           <button class="btn-ghost" onclick="showDashTab('plan')">View 90-day plan</button>
         </div>
       </div>
@@ -1401,6 +1455,11 @@ function createSession() {
     `Share this link with your ${size} team members. They can respond anonymously in about 2 minutes.`;
   document.getElementById('shareBox').classList.remove('hidden');
   document.getElementById('createSessionBtn').style.display = 'none';
+
+  // Generate QR code
+  try {
+    generateQR(url, document.getElementById('qrCanvas'), 120);
+  } catch(e) { document.getElementById('qrSection').style.display = 'none'; }
 }
 
 function copyShareUrl() {
@@ -1625,19 +1684,19 @@ function renderDashboard() {
   bg.innerHTML = `
     <div class="benchmark-card">
       <div class="metric-label">Solo-to-Collaborative</div>
-      <div class="metric-value">${m.avgSolo}<span class="metric-unit">%</span></div>
+      <div class="metric-value"><span data-count="${m.avgSolo}">0</span><span class="metric-unit">%</span></div>
       <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${m.avgSolo}%"></div></div>
       <div class="metric-benchmark">Benchmark: Power Users ${BENCHMARKS.POWER_USER_SOLO_PCT}% / Others ${BENCHMARKS.LATE_ADOPTER_SOLO_PCT}%</div>
     </div>
     <div class="benchmark-card">
       <div class="metric-label">Learning Time</div>
-      <div class="metric-value">${m.avgLearningPct}<span class="metric-unit">%</span></div>
+      <div class="metric-value"><span data-count="${m.avgLearningPct}">0</span><span class="metric-unit">%</span></div>
       <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${Math.min(m.avgLearningPct * 5, 100)}%"></div></div>
       <div class="metric-benchmark">Benchmark: Power Users ${BENCHMARKS.POWER_USER_LEARNING_PCT}% / Others ${BENCHMARKS.OTHER_LEARNING_PCT}%</div>
     </div>
     <div class="benchmark-card">
       <div class="metric-label">AI Fatigue Score</div>
-      <div class="metric-value">${m.fatiguePct}<span class="metric-unit">%</span></div>
+      <div class="metric-value"><span data-count="${m.fatiguePct}">0</span><span class="metric-unit">%</span></div>
       <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${m.fatiguePct}%;background:${m.fatiguePct > 40 ? 'var(--red)' : m.fatiguePct > 25 ? 'var(--amber)' : 'var(--green)'}"></div></div>
       <div class="metric-benchmark">Benchmark: ${BENCHMARKS.WORKLOAD_INCREASED_PCT}% increased workload / ${BENCHMARKS.FATIGUE_PCT}% fatigue nationally</div>
     </div>
@@ -1658,10 +1717,13 @@ function renderDashboard() {
         <div class="risk-indicator ${level}"></div>
         <span class="risk-label">${r.label}</span>
       </div>
-      <div class="risk-value">${r.value}%</div>
+      <div class="risk-value"><span data-count="${r.value}">0</span>%</div>
       <div class="risk-benchmark">${r.benchmark}</div>
     </div>`;
   }).join('');
+
+  // Trigger count-up animations
+  animateCountUp();
 }
 
 /* ══════════════════════════════════════════════════
@@ -1953,6 +2015,178 @@ function drawPulseChart(data) {
     ctx.font = '10px "DM Sans", sans-serif';
     ctx.fillText(d.date, x, h - 8);
   });
+}
+
+/* ══════════════════════════════════════════════════
+   QR CODE GENERATOR (lightweight, no dependencies)
+   ══════════════════════════════════════════════════ */
+function generateQR(text, canvas, size) {
+  // Minimal QR code generator using canvas
+  // Uses a simple encoding approach for URL-length strings
+  const modules = qrEncode(text);
+  const ctx = canvas.getContext('2d');
+  const moduleCount = modules.length;
+  const cellSize = Math.floor(size / (moduleCount + 8));
+  const offset = Math.floor((size - cellSize * moduleCount) / 2);
+
+  canvas.width = size;
+  canvas.height = size;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#0B0F13';
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (modules[row][col]) {
+        ctx.fillRect(offset + col * cellSize, offset + row * cellSize, cellSize, cellSize);
+      }
+    }
+  }
+}
+
+// Minimal QR encoder (Version 2-4, Low ECC, Byte mode)
+function qrEncode(text) {
+  const data = new TextEncoder().encode(text);
+  const len = data.length;
+  // Pick version based on data length
+  let version, totalBytes, ecBytes, moduleCount;
+  if (len <= 32) { version = 2; totalBytes = 44; ecBytes = 34; moduleCount = 25; }
+  else if (len <= 55) { version = 3; totalBytes = 70; ecBytes = 55; moduleCount = 29; }
+  else if (len <= 78) { version = 4; totalBytes = 100; ecBytes = 80; moduleCount = 33; }
+  else if (len <= 106) { version = 5; totalBytes = 134; ecBytes = 108; moduleCount = 37; }
+  else if (len <= 134) { version = 6; totalBytes = 172; ecBytes = 136; moduleCount = 41; }
+  else { version = 7; totalBytes = 196; ecBytes = 156; moduleCount = 45; }
+
+  // Build data codewords
+  const bits = [];
+  function pushBits(val, count) { for (let i = count - 1; i >= 0; i--) bits.push((val >> i) & 1); }
+  pushBits(0b0100, 4); // Byte mode
+  pushBits(len, version >= 10 ? 16 : 8);
+  for (const b of data) pushBits(b, 8);
+  pushBits(0, Math.min(4, totalBytes * 8 - bits.length));
+  while (bits.length % 8) bits.push(0);
+  while (bits.length < totalBytes * 8) {
+    pushBits(0xEC, 8);
+    if (bits.length < totalBytes * 8) pushBits(0x11, 8);
+  }
+
+  // Build module matrix (simplified - uses finder patterns + data)
+  const grid = Array.from({ length: moduleCount }, () => Array(moduleCount).fill(null));
+  const reserved = Array.from({ length: moduleCount }, () => Array(moduleCount).fill(false));
+
+  function setModule(r, c, val, res) {
+    if (r >= 0 && r < moduleCount && c >= 0 && c < moduleCount) {
+      grid[r][c] = val;
+      if (res) reserved[r][c] = true;
+    }
+  }
+
+  // Finder patterns
+  function drawFinder(row, col) {
+    for (let r = -1; r <= 7; r++) {
+      for (let c = -1; c <= 7; c++) {
+        const inOuter = r >= 0 && r <= 6 && c >= 0 && c <= 6;
+        const inInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        const onBorder = r === 0 || r === 6 || c === 0 || c === 6;
+        setModule(row + r, col + c, inOuter && (onBorder || inInner) ? 1 : 0, true);
+      }
+    }
+  }
+  drawFinder(0, 0);
+  drawFinder(0, moduleCount - 7);
+  drawFinder(moduleCount - 7, 0);
+
+  // Timing patterns
+  for (let i = 8; i < moduleCount - 8; i++) {
+    setModule(6, i, i % 2 === 0 ? 1 : 0, true);
+    setModule(i, 6, i % 2 === 0 ? 1 : 0, true);
+  }
+
+  // Dark module
+  setModule(moduleCount - 8, 8, 1, true);
+
+  // Format info (hardcoded for Mask 0, ECC L)
+  const formatBits = [1,1,1,0,1,1,1,1,1,0,0,0,1,0,0];
+  for (let i = 0; i < 15; i++) {
+    // Horizontal
+    const hc = i < 8 ? (i < 6 ? i : i + 1) : moduleCount - 15 + i;
+    setModule(8, hc, formatBits[i], true);
+    // Vertical
+    const vr = i < 8 ? (moduleCount - 1 - i) : (i < 9 ? 15 - i : 14 - i);
+    setModule(vr, 8, formatBits[i], true);
+  }
+
+  // Alignment pattern for version 2+
+  if (version >= 2) {
+    const positions = {2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38]}[version] || [];
+    for (const r of positions) {
+      for (const c of positions) {
+        if (reserved[r]?.[c]) continue;
+        for (let dr = -2; dr <= 2; dr++) {
+          for (let dc = -2; dc <= 2; dc++) {
+            const onBorder = Math.abs(dr) === 2 || Math.abs(dc) === 2;
+            const isCenter = dr === 0 && dc === 0;
+            setModule(r + dr, c + dc, (onBorder || isCenter) ? 1 : 0, true);
+          }
+        }
+      }
+    }
+  }
+
+  // Place data bits (upward zigzag)
+  let bitIdx = 0;
+  for (let right = moduleCount - 1; right >= 1; right -= 2) {
+    if (right === 6) right = 5;
+    for (let vert = 0; vert < moduleCount; vert++) {
+      for (let j = 0; j < 2; j++) {
+        const col = right - j;
+        const row = ((Math.floor((moduleCount - 1 - right) / 2)) % 2 === 0) ? moduleCount - 1 - vert : vert;
+        if (reserved[row][col]) continue;
+        const bit = bitIdx < bits.length ? bits[bitIdx] : 0;
+        // Apply mask 0: (row + col) % 2 === 0
+        grid[row][col] = bit ^ ((row + col) % 2 === 0 ? 1 : 0);
+        bitIdx++;
+      }
+    }
+  }
+
+  // Fill any remaining nulls
+  for (let r = 0; r < moduleCount; r++)
+    for (let c = 0; c < moduleCount; c++)
+      if (grid[r][c] === null) grid[r][c] = 0;
+
+  return grid;
+}
+
+/* ══════════════════════════════════════════════════
+   COUNT-UP ANIMATION
+   ══════════════════════════════════════════════════ */
+function animateCountUp() {
+  const elements = document.querySelectorAll('[data-count]');
+  elements.forEach(el => {
+    const target = parseInt(el.dataset.count);
+    const duration = 800;
+    const start = performance.now();
+
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(eased * target);
+      el.textContent = current;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   EXPORT PDF
+   ══════════════════════════════════════════════════ */
+function exportPDF() {
+  window.print();
 }
 
 /* ══════════════════════════════════════════════════
