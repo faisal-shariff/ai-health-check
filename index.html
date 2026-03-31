@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Adoption Health Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   DESIGN TOKENS
+   ══════════════════════════════════════════════════ */
+:root {
+  --serif: 'Fraunces', 'Georgia', serif;
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --primary: #01696F;
+  --primary-light: #20808D;
+  --copper: #C4956A;
+  --copper-dim: rgba(196, 149, 106, 0.15);
+  --power-user: #20808D;
+  --early-adopter: #A84B2F;
+  --non-adopter: #1B474D;
+  --radius: 2px;
+  --radius-lg: 4px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-theme="dark"] {
+  --bg: #0B0F13;
+  --bg-surface: #12171D;
+  --bg-elevated: #181E26;
+  --bg-hover: #1E2530;
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.12);
+  --text: #E8E4DF;
+  --text-secondary: #8A8580;
+  --text-muted: #5A5550;
+  --green: #3DB06A;
+  --amber: #D4A74A;
+  --red: #D45050;
+  --green-bg: rgba(61, 176, 106, 0.08);
+  --amber-bg: rgba(212, 167, 74, 0.08);
+  --red-bg: rgba(212, 80, 80, 0.08);
+  --noise-opacity: 0.03;
+}
+
+[data-theme="light"] {
+  --bg: #F2EDE8;
+  --bg-surface: #FDFCFA;
+  --bg-elevated: #FFFFFF;
+  --bg-hover: #F5F0EB;
+  --border: rgba(0,0,0,0.06);
+  --border-strong: rgba(0,0,0,0.12);
+  --text: #1A1714;
+  --text-secondary: #6B6560;
+  --text-muted: #A09A95;
+  --green: #2D8A50;
+  --amber: #9A7A30;
+  --red: #B53D3D;
+  --green-bg: rgba(45, 138, 80, 0.06);
+  --amber-bg: rgba(154, 122, 48, 0.06);
+  --red-bg: rgba(181, 61, 61, 0.06);
+  --noise-opacity: 0.02;
+}
+
+/* ══════════════════════════════════════════════════
+   RESET & BASE
+   ══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+::selection {
+  background: var(--copper);
+  color: var(--bg);
+}
+
+/* ══════════════════════════════════════════════════
+   LAYOUT
+   ══════════════════════════════════════════════════ */
+.app {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 0 28px 100px;
+}
+
+/* ══════════════════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════════════════ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0 20px;
+  margin-bottom: 8px;
+}
+
+.app-logo {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.app-logo span {
+  color: var(--copper);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0;
+  transition: color 0.2s;
+  line-height: 1;
+}
+.theme-toggle:hover { color: var(--text); }
+.theme-toggle svg { width: 18px; height: 18px; }
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border-strong);
+  margin-bottom: 48px;
+}
+
+/* ══════════════════════════════════════════════════
+   TYPOGRAPHY
+   ══════════════════════════════════════════════════ */
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  margin-bottom: 20px;
+  font-variation-settings: 'opsz' 40;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--copper);
+  font-weight: 400;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-variation-settings: 'opsz' 30;
+}
+
+h3 {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 480px;
+}
+
+.label {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ══════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes expandWidth {
+  from { width: 0; }
+}
+
+.reveal {
+  animation: fadeUp 0.7s var(--ease) both;
+}
+
+.reveal-1 { animation-delay: 0s; }
+.reveal-2 { animation-delay: 0.08s; }
+.reveal-3 { animation-delay: 0.16s; }
+.reveal-4 { animation-delay: 0.24s; }
+.reveal-5 { animation-delay: 0.32s; }
+.reveal-6 { animation-delay: 0.4s; }
+.reveal-7 { animation-delay: 0.48s; }
+
+/* ══════════════════════════════════════════════════
+   FORMS
+   ══════════════════════════════════════════════════ */
+.form-group { margin-bottom: 24px; }
+
+.form-group label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 14px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 300;
+  font-variation-settings: 'opsz' 24;
+  transition: border-color 0.3s;
+  outline: none;
+  border-radius: 0;
+}
+
+input::placeholder {
+  color: var(--text-muted);
+  font-family: var(--serif);
+  font-style: italic;
+}
+
+input:focus {
+  border-bottom-color: var(--copper);
+}
+
+/* ══════════════════════════════════════════════════
+   BUTTONS
+   ══════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--copper);
+  color: #0B0F13;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+}
+.btn-secondary:hover { border-color: var(--copper); color: var(--copper); }
+
+.btn-sm { padding: 8px 20px; font-size: 11px; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--copper);
+  padding: 8px 0;
+  letter-spacing: 0.06em;
+}
+.btn-ghost:hover { opacity: 0.7; }
+.btn-ghost::after {
+  content: ' \2192';
+}
+
+/* ══════════════════════════════════════════════════
+   CARDS
+   ══════════════════════════════════════════════════ */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 28px;
+  position: relative;
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 1: SETUP
+   ══════════════════════════════════════════════════ */
+.setup-screen .hero {
+  margin-bottom: 56px;
+  position: relative;
+}
+
+.research-sources {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.source-tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1;
+}
+
+.source-tag strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.setup-form {
+  max-width: 440px;
+}
+
+.share-box {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border-strong);
+}
+
+.share-url {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 12px;
+}
+
+.share-url input[type="text"] {
+  flex: 1;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-variation-settings: initial;
+}
+
+.share-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 2: SURVEY
+   ══════════════════════════════════════════════════ */
+.survey-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.survey-progress {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 48px;
+  max-width: 240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.survey-progress .step {
+  height: 2px;
+  flex: 1;
+  background: var(--border);
+  transition: background 0.4s var(--ease);
+}
+
+.survey-progress .step.done { background: var(--copper); }
+.survey-progress .step.current { background: var(--copper); opacity: 0.5; }
+
+.question-card {
+  max-width: 560px;
+  margin: 0 auto;
+  min-height: 300px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.question-number {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.question-text {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  margin-bottom: 36px;
+  line-height: 1.35;
+  font-variation-settings: 'opsz' 28;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+  font-size: 14px;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.option::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: var(--copper);
+  transition: width 0.3s var(--ease);
+}
+
+.option:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.option.selected {
+  color: var(--text);
+  border-color: var(--copper);
+}
+
+.option.selected::before { width: 3px; }
+
+.option input { display: none; }
+
+/* Slider */
+.slider-container { padding: 16px 0; }
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.slider-value {
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 48px;
+  font-weight: 300;
+  color: var(--copper);
+  margin-bottom: 20px;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: 'opsz' 48;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--border-strong);
+  outline: none;
+  border-radius: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--copper);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(196, 149, 106, 0.3);
+}
+
+.scale-options {
+  display: flex;
+  gap: 6px;
+}
+
+.scale-options .option {
+  flex: 1;
+  justify-content: center;
+  padding: 16px 8px;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 300;
+}
+
+.scale-hint {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+.survey-nav {
+  display: flex;
+  justify-content: space-between;
+  max-width: 560px;
+  margin: 32px auto 0;
+}
+
+.survey-complete {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.survey-complete .check-icon {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--green);
+  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 3: DASHBOARD
+   ══════════════════════════════════════════════════ */
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.response-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.04em;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Spectrum bar */
+.spectrum-section { margin-bottom: 56px; }
+
+.spectrum-bar {
+  display: flex;
+  height: 48px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.spectrum-bar .segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  transition: width 0.8s var(--ease);
+  min-width: 0;
+}
+
+.spectrum-bar .segment.power-user { background: var(--power-user); }
+.spectrum-bar .segment.early-adopter { background: var(--early-adopter); }
+.spectrum-bar .segment.non-adopter { background: var(--non-adopter); }
+
+.spectrum-legend {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 3px;
+}
+
+/* Benchmark cards */
+.benchmark-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 56px;
+  border: 1px solid var(--border);
+}
+
+.benchmark-card {
+  background: var(--bg-surface);
+  padding: 28px;
+  border: none;
+}
+
+.benchmark-card .metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.metric-value {
+  font-family: var(--serif);
+  font-size: 42px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: 'opsz' 48;
+  line-height: 1;
+}
+
+.metric-unit {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.metric-bar-bg {
+  height: 2px;
+  background: var(--border);
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  background: var(--copper);
+  animation: expandWidth 1s var(--ease) both;
+}
+
+.metric-benchmark {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+/* Risk signals */
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 48px;
+  border: 1px solid var(--border);
+}
+
+.risk-card {
+  padding: 28px;
+  position: relative;
+}
+
+.risk-card .risk-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.risk-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.risk-indicator.green { background: var(--green); }
+.risk-indicator.amber { background: var(--amber); }
+.risk-indicator.red { background: var(--red); }
+
+.risk-card .risk-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+}
+
+.risk-card .risk-value {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 300;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: 'opsz' 36;
+  line-height: 1;
+}
+
+.risk-card .risk-benchmark {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.risk-card.green-bg { background: var(--green-bg); }
+.risk-card.amber-bg { background: var(--amber-bg); }
+.risk-card.red-bg { background: var(--red-bg); }
+
+/* ══════════════════════════════════════════════════
+   NAV TABS
+   ══════════════════════════════════════════════════ */
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-strong);
+  margin-bottom: 48px;
+}
+
+.nav-tab {
+  padding: 12px 0;
+  margin-right: 32px;
+  border: none;
+  background: none;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.3s;
+  position: relative;
+  white-space: nowrap;
+}
+
+.nav-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--copper);
+  transform: scaleX(0);
+  transition: transform 0.3s var(--ease);
+}
+
+.nav-tab:hover { color: var(--text-secondary); }
+.nav-tab.active { color: var(--text); }
+.nav-tab.active::after { transform: scaleX(1); }
+
+/* ══════════════════════════════════════════════════
+   WAITING STATE
+   ══════════════════════════════════════════════════ */
+.waiting-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.waiting-anim {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.waiting-anim span {
+  width: 3px;
+  height: 24px;
+  background: var(--border-strong);
+  animation: waitBar 1.2s ease infinite;
+}
+.waiting-anim span:nth-child(2) { animation-delay: 0.1s; }
+.waiting-anim span:nth-child(3) { animation-delay: 0.2s; }
+.waiting-anim span:nth-child(4) { animation-delay: 0.3s; }
+.waiting-anim span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes waitBar {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.3; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 4: 90-DAY PLAN
+   ══════════════════════════════════════════════════ */
+.plan-header { margin-bottom: 40px; }
+
+.plan-conditional {
+  border-left: 2px solid var(--amber);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  background: var(--amber-bg);
+}
+
+.plan-conditional strong {
+  display: block;
+  font-family: var(--sans);
+  margin-bottom: 6px;
+  color: var(--amber);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.plan-phase {
+  margin-bottom: 40px;
+  padding-left: 32px;
+  position: relative;
+}
+
+.plan-phase::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.phase-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--copper);
+  margin-bottom: 6px;
+}
+
+.phase-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 12px;
+  font-variation-settings: 'opsz' 24;
+}
+
+.phase-body {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.phase-body ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 8px;
+}
+
+.phase-body li {
+  padding-left: 16px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.phase-body li::before {
+  content: '\2014';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+.plan-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 5: MONTHLY PULSE
+   ══════════════════════════════════════════════════ */
+.pulse-chart-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 28px;
+  margin-bottom: 28px;
+}
+
+.pulse-chart canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.pulse-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.pulse-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.pulse-input-row select {
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  flex: 1;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.pulse-input-row select:focus { border-color: var(--copper); }
+
+.interpretation-card {
+  border-left: 2px solid var(--green);
+  padding: 20px 24px;
+  margin-top: 28px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.interpretation-card.rising { border-left-color: var(--red); background: var(--red-bg); }
+.interpretation-card.falling { border-left-color: var(--green); background: var(--green-bg); }
+.interpretation-card.stable { border-left-color: var(--text-muted); }
+
+/* ══════════════════════════════════════════════════
+   SECTION DIVIDER
+   ══════════════════════════════════════════════════ */
+.section-rule {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 48px 0;
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .app { padding: 0 20px 80px; }
+  .benchmark-grid, .risk-grid {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+  .spectrum-legend { flex-direction: column; gap: 10px; }
+  .scale-options { gap: 4px; }
+  .scale-options .option { padding: 14px 4px; font-size: 18px; }
+  .nav-tab { margin-right: 20px; font-size: 11px; }
+  h1 { font-size: 28px; }
+  .metric-value { font-size: 32px; }
+  .research-sources { flex-direction: column; gap: 8px; }
+}
+
+/* ══════════════════════════════════════════════════
+   UTILITY
+   ══════════════════════════════════════════════════ */
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mt-32 { margin-top: 32px; }
+.mt-48 { margin-top: 48px; }
+.mb-24 { margin-bottom: 24px; }
+.text-muted { color: var(--text-muted); }
+.text-sm { font-size: 13px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="app-logo"><span>AI</span> Adoption Health Check</div>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+  <div class="divider"></div>
+
+  <!-- ════════════════ Screen 1: Setup ════════════════ -->
+  <div class="screen active" id="screen-setup">
+    <div class="hero reveal reveal-1">
+      <h1>Diagnose your team's<br>AI adoption in <em>10 minutes</em></h1>
+      <p class="subtitle">Run an anonymous survey, see where your team sits on the intensification-integration spectrum, and get a research-backed 90-day action plan.</p>
+      <div class="research-sources reveal reveal-2">
+        <div class="source-tag"><strong>Gensler 2026</strong> &middot; 16,400 workers</div>
+        <div class="source-tag"><strong>ResumeTemplates</strong> &middot; 1,000+ workers</div>
+        <div class="source-tag"><strong>UC Berkeley Haas</strong> &middot; 200 employees</div>
+      </div>
+    </div>
+
+    <div class="setup-form reveal reveal-3">
+      <div class="form-group">
+        <label for="leadName">Your first name</label>
+        <input type="text" id="leadName" placeholder="Sarah" autocomplete="given-name">
+      </div>
+      <div class="form-group">
+        <label for="teamName">Team name</label>
+        <input type="text" id="teamName" placeholder="Product Engineering">
+      </div>
+      <div class="form-group">
+        <label for="teamSize">Team size</label>
+        <input type="number" id="teamSize" placeholder="8" min="2" max="200">
+      </div>
+      <button class="btn btn-primary mt-32" id="createSessionBtn" onclick="createSession()">Create session</button>
+
+      <div class="share-box hidden" id="shareBox">
+        <p class="label">Share this link with your team</p>
+        <div class="share-url">
+          <input type="text" id="shareUrl" readonly>
+          <button class="btn btn-secondary btn-sm" onclick="copyShareUrl()">Copy</button>
+        </div>
+        <p class="share-note" id="shareNote"></p>
+        <button class="btn-ghost mt-32" onclick="goToDashboard()">Go to dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ Screen 2: Survey ════════════════ -->
+  <div class="screen" id="screen-survey">
+    <div id="surveyActive">
+      <div class="survey-progress" id="surveyProgress"></div>
+      <div class="question-card" id="questionCard"></div>
+      <div class="survey-nav">
+        <button class="btn btn-secondary btn-sm" id="prevBtn" onclick="prevQuestion()">Back</button>
+        <button class="btn btn-primary btn-sm" id="nextBtn" onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+
+    <div class="survey-complete hidden" id="surveyComplete">
+      <div class="check-icon">&#10003;</div>
+      <h2>Response submitted</h2>
+      <p class="subtitle" style="margin: 16px auto 0;">Your anonymous response has been recorded.<br>Your team lead will see the aggregated results.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════ Screen 3: Dashboard ════════════════ -->
+  <div class="screen" id="screen-dashboard">
+    <div class="nav-tabs" id="dashNav">
+      <button class="nav-tab active" onclick="showDashTab('diagnostic')">Diagnostic</button>
+      <button class="nav-tab" onclick="showDashTab('plan')">90-Day Plan</button>
+      <button class="nav-tab" onclick="showDashTab('pulse')">Monthly Pulse</button>
+    </div>
+
+    <!-- Diagnostic Tab -->
+    <div id="tab-diagnostic">
+      <div class="dashboard-header">
+        <div>
+          <h2 id="dashTeamName">Team Diagnostic</h2>
+          <p class="subtitle text-sm mt-8" id="dashSubtitle"></p>
+        </div>
+        <div class="response-count">
+          <span class="live-dot"></span>
+          <span id="responseCount">0 responses</span>
+        </div>
+      </div>
+
+      <div id="waitingState" class="waiting-state">
+        <div class="waiting-anim">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <h2>Waiting for responses</h2>
+        <p class="subtitle" style="margin: 12px auto 0;">The diagnostic will appear once 3 or more<br>team members have responded.</p>
+      </div>
+
+      <div id="dashContent" class="hidden">
+        <!-- Spectrum -->
+        <div class="spectrum-section">
+          <p class="label">Team Adoption Spectrum</p>
+          <div class="spectrum-bar" id="spectrumBar"></div>
+          <div class="spectrum-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--power-user)"></div> Power Users</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--early-adopter)"></div> Early Adopters</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--non-adopter)"></div> Non-Adopters</div>
+          </div>
+        </div>
+
+        <!-- Benchmarks -->
+        <p class="label">Benchmarks vs Research</p>
+        <div class="benchmark-grid" id="benchmarkGrid"></div>
+
+        <!-- Risk Signals -->
+        <p class="label">Risk Signals</p>
+        <div class="risk-grid" id="riskGrid"></div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="addTestResponse()">+ Add test response</button>
+          <button class="btn-ghost" onclick="showDashTab('plan')">View 90-day plan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan Tab -->
+    <div id="tab-plan" class="hidden"></div>
+
+    <!-- Pulse Tab -->
+    <div id="tab-pulse" class="hidden"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   CONSTANTS & BENCHMARKS
+   ══════════════════════════════════════════════════ */
+const BENCHMARKS = {
+  POWER_USER_SOLO_PCT: 37,
+  LATE_ADOPTER_SOLO_PCT: 42,
+  POWER_USER_LEARNING_PCT: 12,
+  OTHER_LEARNING_PCT: 8,
+  WORKLOAD_INCREASED_PCT: 31,
+  FATIGUE_PCT: 37,
+  MANAGER_PRESSURE_PCT: 45,
+  INTENSIFICATION_PCT: 31,
+  WAGE_PREMIUM_AI: 23,
+  WAGE_PREMIUM_MASTERS: 13,
+  OPTIMAL_AI_TIME_LOW: 7,
+  OPTIMAL_AI_TIME_HIGH: 10,
+  OPTIMAL_AI_WORKERS_PCT: 3,
+};
+
+const QUESTIONS = [
+  {
+    id: 'ai_frequency',
+    text: 'How often do you use AI tools for work?',
+    type: 'single',
+    options: ['Never', 'Occasionally', 'Daily', 'Multiple times daily'],
+  },
+  {
+    id: 'ai_personal',
+    text: 'Do you use AI tools in your personal life too?',
+    type: 'single',
+    options: ['Yes', 'No'],
+  },
+  {
+    id: 'solo_collab',
+    text: 'What percentage of your work week is spent working alone versus collaborating?',
+    type: 'slider',
+    min: 0, max: 100, step: 5, default: 50,
+    labelLeft: 'Solo work', labelRight: 'Collaborative',
+    format: v => v + '%',
+  },
+  {
+    id: 'learning_hours',
+    text: 'How many hours per week do you spend on intentional learning or skill development?',
+    type: 'single',
+    options: ['0', '1\u20132', '3\u20134', '5+'],
+  },
+  {
+    id: 'workload_change',
+    text: 'Has AI increased, decreased, or not changed your workload?',
+    type: 'single',
+    options: ['Increased significantly', 'Increased somewhat', 'No change', 'Decreased somewhat', 'Decreased significantly'],
+  },
+  {
+    id: 'pressure',
+    text: 'On a scale of 1\u20135, how much pressure do you feel to use AI at work?',
+    type: 'scale',
+    min: 1, max: 5,
+    labelLeft: 'None', labelRight: 'Extreme',
+  },
+  {
+    id: 'manager_ai_ref',
+    text: 'Does your manager reference AI capabilities when assigning additional work?',
+    type: 'single',
+    options: ['Often', 'Sometimes', 'Rarely', 'Never'],
+  },
+];
+
+/* ══════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════ */
+let state = {
+  sessionId: null,
+  leadName: '',
+  teamName: '',
+  teamSize: 0,
+  responses: [],
+  currentQuestion: 0,
+  surveyAnswers: {},
+  pulseData: [],
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('aiHealthCheck');
+    if (saved) Object.assign(state, JSON.parse(saved));
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem('aiHealthCheck', JSON.stringify(state)); } catch(e) {}
+}
+
+loadState();
+
+/* ══════════════════════════════════════════════════
+   ROUTING
+   ══════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function checkRoute() {
+  const params = new URLSearchParams(window.location.search);
+  const sid = params.get('s');
+  const submitData = params.get('submit');
+
+  if (submitData) {
+    try {
+      const resp = JSON.parse(atob(submitData));
+      addResponse(resp);
+      window.history.replaceState({}, '', window.location.pathname + (sid ? '?s=' + sid : ''));
+    } catch(e) {}
+  }
+
+  if (sid && !params.get('lead')) {
+    state.sessionId = sid;
+    showScreen('survey');
+    renderQuestion();
+  } else if (state.sessionId && params.get('lead') === '1') {
+    showScreen('dashboard');
+    renderDashboard();
+  } else if (state.sessionId) {
+    showScreen('dashboard');
+    renderDashboard();
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   THEME
+   ══════════════════════════════════════════════════ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  updateThemeIcon(next);
+  localStorage.setItem('aiHealthCheck_theme', next);
+}
+
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (theme === 'light') {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>';
+  }
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('aiHealthCheck_theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcon(saved);
+  }
+})();
+
+/* ══════════════════════════════════════════════════
+   SCREEN 1: SETUP
+   ══════════════════════════════════════════════════ */
+function createSession() {
+  const name = document.getElementById('leadName').value.trim();
+  const team = document.getElementById('teamName').value.trim();
+  const size = parseInt(document.getElementById('teamSize').value) || 0;
+
+  if (!name || !team || size < 2) {
+    alert('Please fill in all fields. Team size must be at least 2.');
+    return;
+  }
+
+  state.leadName = name;
+  state.teamName = team;
+  state.teamSize = size;
+  state.sessionId = generateId();
+  state.responses = [];
+  saveState();
+
+  const base = window.location.origin + window.location.pathname;
+  const url = base + '?s=' + state.sessionId;
+
+  document.getElementById('shareUrl').value = url;
+  document.getElementById('shareNote').textContent =
+    `Share this link with your ${size} team members. They can respond anonymously in about 2 minutes.`;
+  document.getElementById('shareBox').classList.remove('hidden');
+  document.getElementById('createSessionBtn').style.display = 'none';
+}
+
+function copyShareUrl() {
+  const input = document.getElementById('shareUrl');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = input.nextElementSibling;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+function goToDashboard() {
+  window.history.pushState({}, '', window.location.pathname + '?s=' + state.sessionId + '&lead=1');
+  showScreen('dashboard');
+  renderDashboard();
+}
+
+function generateId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 2: SURVEY
+   ══════════════════════════════════════════════════ */
+function renderQuestion() {
+  const idx = state.currentQuestion;
+  const q = QUESTIONS[idx];
+  const total = QUESTIONS.length;
+
+  const prog = document.getElementById('surveyProgress');
+  prog.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const step = document.createElement('div');
+    step.className = 'step' + (i < idx ? ' done' : i === idx ? ' current' : '');
+    prog.appendChild(step);
+  }
+
+  const card = document.getElementById('questionCard');
+  let html = `<div class="question-number">Question ${idx + 1} of ${total}</div>`;
+  html += `<div class="question-text">${q.text}</div>`;
+
+  const currentVal = state.surveyAnswers[q.id];
+
+  if (q.type === 'single') {
+    html += '<div class="options">';
+    q.options.forEach((opt) => {
+      const selected = currentVal === opt ? ' selected' : '';
+      html += `<div class="option${selected}" onclick="selectOption('${q.id}', '${opt.replace(/'/g, "\\'")}', this)">
+        <input type="radio" name="${q.id}" value="${opt}"> ${opt}
+      </div>`;
+    });
+    html += '</div>';
+  } else if (q.type === 'slider') {
+    const val = currentVal !== undefined ? currentVal : q.default;
+    html += `<div class="slider-container">
+      <div class="slider-labels"><span>${q.labelLeft}</span><span>${q.labelRight}</span></div>
+      <div class="slider-value" id="sliderVal">${q.format(val)}</div>
+      <input type="range" min="${q.min}" max="${q.max}" step="${q.step}" value="${val}"
+        oninput="updateSlider('${q.id}', this.value)">
+    </div>`;
+    if (currentVal === undefined) state.surveyAnswers[q.id] = q.default;
+  } else if (q.type === 'scale') {
+    html += '<div class="scale-options">';
+    for (let i = q.min; i <= q.max; i++) {
+      const selected = currentVal === i ? ' selected' : '';
+      html += `<div class="option${selected}" onclick="selectOption('${q.id}', ${i}, this)">${i}</div>`;
+    }
+    html += '</div>';
+    html += `<div class="scale-hint"><span>${q.labelLeft}</span><span>${q.labelRight}</span></div>`;
+  }
+
+  card.innerHTML = html;
+
+  document.getElementById('prevBtn').style.visibility = idx === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').textContent = idx === total - 1 ? 'Submit' : 'Next';
+}
+
+function selectOption(qId, value, el) {
+  state.surveyAnswers[qId] = value;
+  el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function updateSlider(qId, value) {
+  const q = QUESTIONS.find(q => q.id === qId);
+  state.surveyAnswers[qId] = parseInt(value);
+  document.getElementById('sliderVal').textContent = q.format(value);
+}
+
+function nextQuestion() {
+  const q = QUESTIONS[state.currentQuestion];
+  if (state.surveyAnswers[q.id] === undefined) {
+    if (q.type !== 'slider') return;
+  }
+  if (state.currentQuestion === QUESTIONS.length - 1) {
+    submitSurvey();
+    return;
+  }
+  state.currentQuestion++;
+  renderQuestion();
+}
+
+function prevQuestion() {
+  if (state.currentQuestion > 0) {
+    state.currentQuestion--;
+    renderQuestion();
+  }
+}
+
+function submitSurvey() {
+  addResponse({ ...state.surveyAnswers });
+  document.getElementById('surveyActive').classList.add('hidden');
+  document.getElementById('surveyComplete').classList.remove('hidden');
+}
+
+function addResponse(resp) {
+  state.responses.push(resp);
+  saveState();
+  if (document.getElementById('screen-dashboard').classList.contains('active')) {
+    renderDashboard();
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   TEST DATA
+   ══════════════════════════════════════════════════ */
+function addTestResponse() {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  addResponse({
+    ai_frequency: pick(['Never', 'Occasionally', 'Daily', 'Multiple times daily']),
+    ai_personal: pick(['Yes', 'No']),
+    solo_collab: Math.round(Math.random() * 20) * 5 + 20,
+    learning_hours: pick(['0', '1\u20132', '3\u20134', '5+']),
+    workload_change: pick(['Increased significantly', 'Increased somewhat', 'No change', 'Decreased somewhat', 'Decreased significantly']),
+    pressure: Math.floor(Math.random() * 5) + 1,
+    manager_ai_ref: pick(['Often', 'Sometimes', 'Rarely', 'Never']),
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 3: DASHBOARD
+   ══════════════════════════════════════════════════ */
+function classifyResponse(r) {
+  const daily = r.ai_frequency === 'Daily' || r.ai_frequency === 'Multiple times daily';
+  const personal = r.ai_personal === 'Yes';
+  const learning3 = r.learning_hours === '3\u20134' || r.learning_hours === '5+';
+  if (daily && personal && learning3) return 'power';
+  if (r.ai_frequency !== 'Never') return 'early';
+  return 'non';
+}
+
+function computeMetrics() {
+  const R = state.responses;
+  const n = R.length;
+  if (n === 0) return null;
+
+  const classes = R.map(classifyResponse);
+  const powerPct = Math.round(classes.filter(c => c === 'power').length / n * 100);
+  const earlyPct = Math.round(classes.filter(c => c === 'early').length / n * 100);
+  const nonPct = 100 - powerPct - earlyPct;
+  const avgSolo = Math.round(R.reduce((s, r) => s + (r.solo_collab || 50), 0) / n);
+
+  const learningMap = { '0': 0, '1\u20132': 1.5, '3\u20134': 3.5, '5+': 6 };
+  const avgLearningHrs = R.reduce((s, r) => s + (learningMap[r.learning_hours] || 0), 0) / n;
+  const avgLearningPct = Math.round(avgLearningHrs / 40 * 100);
+
+  const workloadIncreasedPct = Math.round(
+    R.filter(r => r.workload_change === 'Increased significantly' || r.workload_change === 'Increased somewhat').length / n * 100
+  );
+
+  const fatiguePct = Math.round(
+    R.filter(r => (r.pressure >= 4) || r.workload_change === 'Increased significantly' || r.workload_change === 'Increased somewhat').length / n * 100
+  );
+
+  const managerPressurePct = Math.round(
+    R.filter(r => r.manager_ai_ref === 'Often' || r.manager_ai_ref === 'Sometimes').length / n * 100
+  );
+
+  const learningZeroPct = Math.round(
+    R.filter(r => r.learning_hours === '0').length / n * 100
+  );
+
+  return { n, powerPct, earlyPct, nonPct, avgSolo, avgLearningPct, workloadIncreasedPct, fatiguePct, managerPressurePct, learningZeroPct };
+}
+
+function renderDashboard() {
+  const m = computeMetrics();
+  const n = state.responses.length;
+
+  document.getElementById('dashTeamName').textContent = state.teamName || 'Team Diagnostic';
+  document.getElementById('dashSubtitle').textContent = state.leadName ? `Led by ${state.leadName}` : '';
+  document.getElementById('responseCount').textContent = n + ' response' + (n !== 1 ? 's' : '');
+
+  if (n < 3) {
+    document.getElementById('waitingState').classList.remove('hidden');
+    document.getElementById('dashContent').classList.add('hidden');
+    if (!document.getElementById('testBtn')) {
+      const ws = document.getElementById('waitingState');
+      const btn = document.createElement('button');
+      btn.id = 'testBtn';
+      btn.className = 'btn btn-secondary btn-sm mt-32';
+      btn.textContent = '+ Add test response';
+      btn.onclick = addTestResponse;
+      ws.appendChild(btn);
+    }
+    return;
+  }
+
+  document.getElementById('waitingState').classList.add('hidden');
+  document.getElementById('dashContent').classList.remove('hidden');
+
+  // Spectrum bar
+  const bar = document.getElementById('spectrumBar');
+  bar.innerHTML = '';
+  if (m.powerPct > 0) bar.innerHTML += `<div class="segment power-user" style="width:${m.powerPct}%">${m.powerPct}%</div>`;
+  if (m.earlyPct > 0) bar.innerHTML += `<div class="segment early-adopter" style="width:${m.earlyPct}%">${m.earlyPct}%</div>`;
+  if (m.nonPct > 0) bar.innerHTML += `<div class="segment non-adopter" style="width:${m.nonPct}%">${m.nonPct}%</div>`;
+
+  // Benchmark cards
+  const bg = document.getElementById('benchmarkGrid');
+  bg.innerHTML = `
+    <div class="benchmark-card">
+      <div class="metric-label">Solo-to-Collaborative</div>
+      <div class="metric-value">${m.avgSolo}<span class="metric-unit">%</span></div>
+      <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${m.avgSolo}%"></div></div>
+      <div class="metric-benchmark">Benchmark: Power Users ${BENCHMARKS.POWER_USER_SOLO_PCT}% / Others ${BENCHMARKS.LATE_ADOPTER_SOLO_PCT}%</div>
+    </div>
+    <div class="benchmark-card">
+      <div class="metric-label">Learning Time</div>
+      <div class="metric-value">${m.avgLearningPct}<span class="metric-unit">%</span></div>
+      <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${Math.min(m.avgLearningPct * 5, 100)}%"></div></div>
+      <div class="metric-benchmark">Benchmark: Power Users ${BENCHMARKS.POWER_USER_LEARNING_PCT}% / Others ${BENCHMARKS.OTHER_LEARNING_PCT}%</div>
+    </div>
+    <div class="benchmark-card">
+      <div class="metric-label">AI Fatigue Score</div>
+      <div class="metric-value">${m.fatiguePct}<span class="metric-unit">%</span></div>
+      <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${m.fatiguePct}%;background:${m.fatiguePct > 40 ? 'var(--red)' : m.fatiguePct > 25 ? 'var(--amber)' : 'var(--green)'}"></div></div>
+      <div class="metric-benchmark">Benchmark: ${BENCHMARKS.WORKLOAD_INCREASED_PCT}% increased workload / ${BENCHMARKS.FATIGUE_PCT}% fatigue nationally</div>
+    </div>
+  `;
+
+  // Risk signals
+  const rg = document.getElementById('riskGrid');
+  const risks = [
+    { label: 'Manager Pressure', value: m.managerPressurePct, benchmark: `National avg: ${BENCHMARKS.MANAGER_PRESSURE_PCT}%`, thresholds: [25, 45] },
+    { label: 'Intensification', value: m.workloadIncreasedPct, benchmark: `National avg: ${BENCHMARKS.INTENSIFICATION_PCT}%`, thresholds: [20, 40] },
+    { label: 'Learning Gap', value: m.learningZeroPct, benchmark: '% spending 0 hrs on learning', thresholds: [25, 50] },
+  ];
+
+  rg.innerHTML = risks.map(r => {
+    const level = r.value < r.thresholds[0] ? 'green' : r.value < r.thresholds[1] ? 'amber' : 'red';
+    return `<div class="risk-card ${level}-bg">
+      <div class="risk-header">
+        <div class="risk-indicator ${level}"></div>
+        <span class="risk-label">${r.label}</span>
+      </div>
+      <div class="risk-value">${r.value}%</div>
+      <div class="risk-benchmark">${r.benchmark}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   DASHBOARD TABS
+   ══════════════════════════════════════════════════ */
+function showDashTab(tab) {
+  document.querySelectorAll('#dashNav .nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['diagnostic', 'plan', 'pulse'][i] === tab);
+  });
+  document.getElementById('tab-diagnostic').classList.toggle('hidden', tab !== 'diagnostic');
+  document.getElementById('tab-plan').classList.toggle('hidden', tab !== 'plan');
+  document.getElementById('tab-pulse').classList.toggle('hidden', tab !== 'pulse');
+  if (tab === 'plan') renderPlan();
+  if (tab === 'pulse') renderPulse();
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 4: 90-DAY PLAN
+   ══════════════════════════════════════════════════ */
+function renderPlan() {
+  const m = computeMetrics();
+  const container = document.getElementById('tab-plan');
+
+  if (!m || m.n < 3) {
+    container.innerHTML = '<div class="waiting-state"><p class="text-muted" style="font-style:italic">Need at least 3 responses to generate a plan.</p></div>';
+    return;
+  }
+
+  let conditionals = '';
+  let skipPhase1 = false;
+
+  if (m.workloadIncreasedPct > 40) {
+    conditionals += `<div class="plan-conditional">
+      <strong>Pressure Reset Required</strong>
+      ${m.workloadIncreasedPct}% of your team reports increased workload (threshold: 40%). In Phase 1, commit to three behaviour changes:
+      (a) never reference AI when assigning more work, (b) replace AI usage tracking with outcome tracking,
+      (c) never mandate a tool without 4 hours of training.
+    </div>`;
+  }
+
+  if (m.learningZeroPct > 50) {
+    conditionals += `<div class="plan-conditional">
+      <strong>Learning Gap Detected</strong>
+      ${m.learningZeroPct}% of your team spends zero hours on learning. Add protected 2-hour weekly learning blocks in Phase 1 before any AI task assignments.
+    </div>`;
+  }
+
+  if (m.powerPct > 30) {
+    skipPhase1 = true;
+    conditionals += `<div class="plan-conditional" style="border-left-color:var(--green);background:var(--green-bg);">
+      <strong style="color:var(--green);">Accelerated Start</strong>
+      ${m.powerPct}% of your team are Power Users. Skip Phase 1 and start at Phase 2 with a focus on lifting Early Adopters.
+    </div>`;
+  }
+
+  let planMd = `# 90-Day AI Adoption Plan: ${state.teamName}\n`;
+  planMd += `*Generated ${new Date().toLocaleDateString()} | ${m.n} responses*\n\n`;
+  planMd += `## Team Profile\n`;
+  planMd += `- Power Users: ${m.powerPct}% | Early Adopters: ${m.earlyPct}% | Non-Adopters: ${m.nonPct}%\n`;
+  planMd += `- Solo time: ${m.avgSolo}% | Learning: ${m.avgLearningPct}% | Fatigue: ${m.fatiguePct}%\n\n`;
+
+  const phases = [];
+
+  if (!skipPhase1) {
+    phases.push({
+      num: 1, days: '1\u201330', title: 'Foundation',
+      items: [
+        'Each team member selects one recurring work task and one personal task to improve with AI',
+        'Document before and after: time saved, quality change, experience',
+        'Goal: build individual AI habits without pressure',
+      ],
+    });
+    planMd += `## Phase 1: Foundation (Days 1-30)\n` + phases[phases.length-1].items.map(i => `- ${i}`).join('\n') + '\n\n';
+  }
+
+  phases.push({
+    num: skipPhase1 ? 1 : 2, days: skipPhase1 ? '1\u201330' : '31\u201360', title: 'Expansion',
+    items: [
+      'Each team member identifies one task currently done by another team member that AI could help them understand or contribute to',
+      'This channels the \u201Ctask expansion\u201D finding from the Berkeley study intentionally rather than letting it happen organically',
+      'Goal: break down knowledge silos using AI as a bridge',
+    ],
+  });
+  planMd += `## Phase ${skipPhase1 ? 1 : 2}: Expansion (Days ${skipPhase1 ? '1-30' : '31-60'})\n` + phases[phases.length-1].items.map(i => `- ${i}`).join('\n') + '\n\n';
+
+  phases.push({
+    num: skipPhase1 ? 2 : 3, days: skipPhase1 ? '31\u201360' : '61\u201390', title: 'Integration',
+    items: [
+      'Each team member shares their most effective AI workflow with the team (15-min lightning talks)',
+      'Team collectively identifies one workflow to standardise',
+      'Goal: build the learning-and-sharing culture that research links to top performers',
+    ],
+  });
+  planMd += `## Phase ${skipPhase1 ? 2 : 3}: Integration (Days ${skipPhase1 ? '31-60' : '61-90'})\n` + phases[phases.length-1].items.map(i => `- ${i}`).join('\n') + '\n';
+
+  if (m.workloadIncreasedPct > 40) planMd += `\n## Pressure Reset\n- Never reference AI when assigning more work\n- Replace AI usage tracking with outcome tracking\n- Never mandate a tool without 4 hours of training\n`;
+  if (m.learningZeroPct > 50) planMd += `\n## Learning Gap\n- Add protected 2-hour weekly learning blocks before AI task assignments\n`;
+
+  container.innerHTML = `
+    <div class="plan-header">
+      <h2>90-Day Action Plan</h2>
+      <p class="subtitle mt-8">Personalised for ${state.teamName} based on ${m.n} responses</p>
+    </div>
+    ${conditionals}
+    ${phases.map(p => `
+      <div class="plan-phase">
+        <div class="phase-label">Phase ${p.num} &mdash; Days ${p.days}</div>
+        <div class="phase-title">${p.title}</div>
+        <div class="phase-body">
+          <ul>${p.items.map(i => `<li>${i}</li>`).join('')}</ul>
+        </div>
+      </div>
+    `).join('')}
+    <div class="plan-actions">
+      <button class="btn btn-primary btn-sm" onclick="copyPlan()">Copy as Markdown</button>
+      <button class="btn-ghost" onclick="showDashTab('pulse')">Set up monthly pulse</button>
+    </div>
+  `;
+
+  container.dataset.planMd = planMd;
+}
+
+function copyPlan() {
+  const md = document.getElementById('tab-plan').dataset.planMd;
+  navigator.clipboard.writeText(md).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy as Markdown', 1500);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 5: MONTHLY PULSE
+   ══════════════════════════════════════════════════ */
+function renderPulse() {
+  const container = document.getElementById('tab-pulse');
+  const data = state.pulseData || [];
+
+  const trendClass = data.length >= 2 ? (getTrend(data) > 0 ? 'rising' : getTrend(data) < 0 ? 'falling' : 'stable') : '';
+
+  container.innerHTML = `
+    <div class="plan-header">
+      <h2>Monthly Pulse</h2>
+      <p class="subtitle mt-8">Track whether AI is adding to or reducing your team's workload over time.</p>
+    </div>
+
+    <div class="pulse-chart-container">
+      <p class="label">Workload Trend</p>
+      ${data.length === 0 ? '<div class="pulse-empty">No pulse data yet. Add your first reading below.</div>' : '<canvas id="pulseCanvas"></canvas>'}
+    </div>
+
+    <div class="card">
+      <p class="label">Add Pulse Reading</p>
+      <p class="text-sm text-muted mb-24">Ask your team: \u201COn a scale of 1\u20135, how much has AI increased your workload this month?\u201D</p>
+      <div class="pulse-input-row">
+        <select id="pulseScore">
+          <option value="">Select team average\u2026</option>
+          <option value="1">1 \u2014 No increase at all</option>
+          <option value="2">2 \u2014 Slight increase</option>
+          <option value="3">3 \u2014 Moderate increase</option>
+          <option value="4">4 \u2014 Significant increase</option>
+          <option value="5">5 \u2014 Extreme increase</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="addPulse()">Add</button>
+      </div>
+    </div>
+
+    ${data.length >= 2 ? `
+      <div class="interpretation-card ${trendClass}">
+        <p class="label" style="margin-bottom:8px">Interpretation</p>
+        <p class="text-sm" style="color:var(--text-secondary)">
+          ${getTrend(data) > 0 ? 'Rising trend detected. The AI transition may be adding pressure. Consider revisiting Phase 1 actions.' :
+            getTrend(data) < 0 ? 'Falling trend. The transition appears to be working \u2014 workload perception is improving.' :
+            'Stable. Continue monitoring monthly.'}
+        </p>
+      </div>
+    ` : ''}
+  `;
+
+  if (data.length > 0) drawPulseChart(data);
+}
+
+function addPulse() {
+  const val = parseInt(document.getElementById('pulseScore').value);
+  if (!val) return;
+  if (!state.pulseData) state.pulseData = [];
+  state.pulseData.push({ date: new Date().toISOString().slice(0, 7), score: val });
+  saveState();
+  renderPulse();
+}
+
+function getTrend(data) {
+  if (data.length < 2) return 0;
+  return data[data.length - 1].score - data[data.length - 2].score;
+}
+
+function drawPulseChart(data) {
+  const canvas = document.getElementById('pulseCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 200 * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = '200px';
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = 200;
+  const padL = 32, padR = 20, padT = 20, padB = 32;
+  const chartW = w - padL - padR;
+  const chartH = h - padT - padB;
+
+  const cs = getComputedStyle(document.documentElement);
+  const borderColor = cs.getPropertyValue('--border-strong').trim();
+  const mutedColor = cs.getPropertyValue('--text-muted').trim();
+  const copperColor = cs.getPropertyValue('--copper').trim();
+
+  // Grid lines
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i <= 5; i++) {
+    const y = padT + chartH - (i - 1) / 4 * chartH;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + chartW, y);
+    ctx.stroke();
+    ctx.fillStyle = mutedColor;
+    ctx.font = '10px "DM Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(i, padL - 8, y + 4);
+  }
+
+  if (data.length === 1) {
+    const x = padL + chartW / 2;
+    const y = padT + chartH - (data[0].score - 1) / 4 * chartH;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = copperColor;
+    ctx.fill();
+    ctx.fillStyle = mutedColor;
+    ctx.textAlign = 'center';
+    ctx.font = '10px "DM Sans", sans-serif';
+    ctx.fillText(data[0].date, x, h - 8);
+    return;
+  }
+
+  // Area fill
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = padL + (i / (data.length - 1)) * chartW;
+    const y = padT + chartH - (d.score - 1) / 4 * chartH;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.lineTo(padL + chartW, padT + chartH);
+  ctx.lineTo(padL, padT + chartH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+  grad.addColorStop(0, 'rgba(196, 149, 106, 0.12)');
+  grad.addColorStop(1, 'rgba(196, 149, 106, 0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = copperColor;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  data.forEach((d, i) => {
+    const x = padL + (i / (data.length - 1)) * chartW;
+    const y = padT + chartH - (d.score - 1) / 4 * chartH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Points & labels
+  data.forEach((d, i) => {
+    const x = padL + (i / (data.length - 1)) * chartW;
+    const y = padT + chartH - (d.score - 1) / 4 * chartH;
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = copperColor;
+    ctx.fill();
+    ctx.fillStyle = mutedColor;
+    ctx.textAlign = 'center';
+    ctx.font = '10px "DM Sans", sans-serif';
+    ctx.fillText(d.date, x, h - 8);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════ */
+checkRoute();
+</script>
+</body>
+</html>
